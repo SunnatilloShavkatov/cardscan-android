@@ -16,6 +16,8 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.getbouncer.scan.camera.CameraPreviewImage
 import com.getbouncer.scan.framework.Config
 import com.getbouncer.scan.framework.util.getSdkVersion
@@ -191,6 +193,7 @@ abstract class SimpleScanActivity : ScanActivity() {
 
         displayState(scanState, scanStatePrevious)
         setContentView(layout)
+        applySafeAreaInsets()
     }
 
     override fun onPause() {
@@ -380,18 +383,15 @@ abstract class SimpleScanActivity : ScanActivity() {
     }
 
     private fun setupLogoUi() {
-        if (isBackgroundDark()) {
-            logoView.setImageDrawable(
+        logoView.setImageDrawable(
+            if (isBackgroundDark()) {
                 ContextCompat.getDrawable(this, R.drawable.bouncer_logo_dark_background)
-            )
-        } else {
-            logoView.setImageDrawable(
+            } else {
                 ContextCompat.getDrawable(this, R.drawable.bouncer_logo_light_background)
-            )
-        }
-
+            }
+        )
         logoView.contentDescription = getString(R.string.bouncer_cardscan_logo)
-        logoView.setVisible(Config.displayLogo)
+        logoView.setVisible(false)
     }
 
     private fun setupVersionUi() {
@@ -751,5 +751,26 @@ abstract class SimpleScanActivity : ScanActivity() {
 
     override fun onInvalidApiKey() {
         scanFlow.cancelFlow()
+    }
+
+    private fun applySafeAreaInsets() {
+        val initialPaddingLeft = layout.paddingLeft
+        val initialPaddingTop = layout.paddingTop
+        val initialPaddingRight = layout.paddingRight
+        val initialPaddingBottom = layout.paddingBottom
+
+        ViewCompat.setOnApplyWindowInsetsListener(layout) { view, windowInsets ->
+            val insets = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            view.setPadding(
+                initialPaddingLeft + insets.left,
+                initialPaddingTop + insets.top,
+                initialPaddingRight + insets.right,
+                initialPaddingBottom + insets.bottom,
+            )
+            windowInsets
+        }
+        ViewCompat.requestApplyInsets(layout)
     }
 }

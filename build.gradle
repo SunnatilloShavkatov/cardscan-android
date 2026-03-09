@@ -90,7 +90,7 @@ allprojects {
 }
 
 ext {
-    publishGroupId = 'com.getbouncer'
+    publishGroupId = 'uz.shs.cardscan'
     ext["signing.keyId"] = ''
     ext["signing.password"] = ''
     ext["signing.secretKeyRingFile"] = ''

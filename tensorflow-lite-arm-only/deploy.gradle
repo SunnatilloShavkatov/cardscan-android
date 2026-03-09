@@ -26,7 +26,7 @@ ext {
     developerName = 'Bouncer Technologies'
     developerEmail = 'bouncer-support@stripe.com'
 
-    publishGroupId = 'com.getbouncer'
+    publishGroupId = 'uz.shs.cardscan'
     publishArtifactId = 'tensorflow-lite-arm-only'
     publishVersion = version
 }

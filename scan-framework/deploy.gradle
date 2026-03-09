@@ -56,7 +56,7 @@ ext {
     developerName = 'Bouncer Technologies'
     developerEmail = 'bouncer-support@stripe.com'
 
-    publishGroupId = 'com.getbouncer'
+    publishGroupId = 'uz.shs.cardscan'
     publishArtifactId = 'scan-framework'
     publishVersion = version
 }

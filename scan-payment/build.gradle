@@ -65,9 +65,7 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:[1.5.1]"
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:[1.1.0,1.2.2]"
 
-    // Allow the user to specify their own version of Tensorflow Lite to include
-    runtimeOnly project(":tensorflow-lite")
-    compileOnly "org.tensorflow:tensorflow-lite:2.4.0"
+    implementation project(":tensorflow-lite")
 }
 
 dependencies {
