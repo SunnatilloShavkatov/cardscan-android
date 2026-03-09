@@ -57,16 +57,11 @@ This repository contains a demonstration app for the CardScan product. To build 
 ## Integration
 See the [integration documentation](https://docs.getbouncer.com/card-scan/android-integration-guide/android-development-guide) in the Bouncer Docs.
 
-### Provisioning an API key
-CardScan requires a valid API key to run. To provision an API key, visit the [Bouncer API console](https://api.getbouncer.com/console).
-
-### Name and expiration extraction support (BETA)
-To test name and/or expiration extraction, please first provision an API key, then reach out to [bouncer-support@stripe.com](mailto:bouncer-support@stripe.com) with details about your use case and estimated volumes.
-
-Before launching the CardScan flow, make sure to call the ```CardScanActivity.warmup()``` function with your API key and set ```initializeNameAndExpiryExtraction``` to ```true```
+### Offline preparation
+This fork is configured for local, offline scanning. Before launching the CardScan flow, call `CardScanActivity.warmup()` and set `initializeNameAndExpiryExtraction` to `true` if you need expiry extraction.
 
 ```kotlin
-CardScanActivity.warmup(this, API_KEY, true)
+CardScanActivity.warmup(this, true)
 ```
 
 ## Customizing

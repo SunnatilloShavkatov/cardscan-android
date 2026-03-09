@@ -41,6 +41,7 @@ class NameAndExpiryAnalyzer private constructor(
     private val textDetect: TextDetect?,
     private val alphabetDetect: AlphabetDetect?,
     private val expiryDetect: ExpiryDetect?,
+    private val expiryOcr: ExpiryOcrAnalyzer?,
     val runNameExtraction: Boolean,
     val runExpiryExtraction: Boolean,
 ) : Analyzer<NameAndExpiryAnalyzer.Input, Any, NameAndExpiryAnalyzer.Prediction> {
@@ -69,7 +70,7 @@ class NameAndExpiryAnalyzer private constructor(
         message = "Replaced by stripe card scan. See https://github.com/stripe/stripe-android/tree/master/stripecardscan",
         replaceWith = ReplaceWith("StripeCardScan"),
     )
-    fun isExpiryDetectorAvailable() = textDetect != null && expiryDetect != null
+    fun isExpiryDetectorAvailable() = (textDetect != null && expiryDetect != null) || expiryOcr != null
 
     @Deprecated(
         message = "Replaced by stripe card scan. See https://github.com/stripe/stripe-android/tree/master/stripecardscan",
@@ -80,13 +81,23 @@ class NameAndExpiryAnalyzer private constructor(
     override suspend fun analyze(
         data: Input,
         state: Any
-    ) = if ((!runNameExtraction && !runExpiryExtraction) || textDetect == null) {
-        Prediction(null, null, null)
-    } else {
-        val textDetectorPrediction = textDetect.analyze(
-            TextDetect.cameraPreviewToInput(data.cameraPreviewImage, data.previewBounds, data.cardFinder),
-            Unit,
-        )
+    ): Prediction {
+        val canRunNameExtraction = runNameExtraction && textDetect != null && alphabetDetect != null
+        val canRunModelExpiryExtraction = runExpiryExtraction && textDetect != null && expiryDetect != null
+        val canRunFallbackExpiryExtraction = runExpiryExtraction && expiryOcr != null
+
+        if (!canRunNameExtraction && !canRunModelExpiryExtraction && !canRunFallbackExpiryExtraction) {
+            return Prediction(null, null, null)
+        }
+
+        val textDetectorPrediction = if (textDetect != null && (canRunNameExtraction || canRunModelExpiryExtraction)) {
+            textDetect.analyze(
+                TextDetect.cameraPreviewToInput(data.cameraPreviewImage, data.previewBounds, data.cardFinder),
+                Unit,
+            )
+        } else {
+            null
+        }
 
         val squareImage = TrackedImage(
             cropCameraPreviewToSquare(data.cameraPreviewImage.image, data.previewBounds, data.cardFinder),
@@ -95,7 +106,7 @@ class NameAndExpiryAnalyzer private constructor(
 
         data.cameraPreviewImage.tracker.trackResult("name_and_expiry_image_cropped")
 
-        val expiry = if (runExpiryExtraction && textDetectorPrediction.expiryBoxes.isNotEmpty()) {
+        val expiry = if (canRunModelExpiryExtraction && textDetectorPrediction?.expiryBoxes?.isNotEmpty() == true) {
             // pick the expiry box by oldest date
             // the boxes produced by textDetector are sometimes too tight, especially in the Y
             // direction. Scale it out a bit
@@ -115,11 +126,20 @@ class NameAndExpiryAnalyzer private constructor(
                     Unit
                 )?.expiry
             }.maxOrNull()
+        } else if (canRunFallbackExpiryExtraction) {
+            expiryOcr?.analyze(
+                ExpiryOcrAnalyzer.Input(
+                    cameraPreviewImage = data.cameraPreviewImage,
+                    previewBounds = data.previewBounds,
+                    cardFinder = data.cardFinder,
+                ),
+                Unit,
+            )?.expiry
         } else {
             null
         }
 
-        val name = if (runNameExtraction) {
+        val name = if (canRunNameExtraction && textDetectorPrediction != null) {
             textDetectorPrediction.nameBoxes.mapNotNull { box ->
                 // the boxes produced by textDetector are sometimes too tight, especially in the Y
                 // direction. Scale it out a bit
@@ -135,7 +155,7 @@ class NameAndExpiryAnalyzer private constructor(
             null
         }
 
-        Prediction(name, textDetectorPrediction.allObjects, expiry)
+        return Prediction(name, textDetectorPrediction?.allObjects, expiry)
     }
 
     private data class CharPredictionWithBox(val characterPrediction: AlphabetDetect.Prediction, val box: RectF) {
@@ -336,6 +356,7 @@ class NameAndExpiryAnalyzer private constructor(
         private val textDetectFactory: TextDetect.Factory,
         private val alphabetDetectFactory: AlphabetDetect.Factory? = null,
         private val expiryDetectFactory: ExpiryDetect.Factory? = null,
+        private val expiryOcrFactory: ExpiryOcrAnalyzer.Factory? = null,
         private val runNameExtraction: Boolean,
         private val runExpiryExtraction: Boolean,
     ) : AnalyzerFactory<Input, Any, Prediction, NameAndExpiryAnalyzer> {
@@ -343,6 +364,7 @@ class NameAndExpiryAnalyzer private constructor(
             textDetect = textDetectFactory.newInstance(),
             alphabetDetect = alphabetDetectFactory?.newInstance(),
             expiryDetect = expiryDetectFactory?.newInstance(),
+            expiryOcr = expiryOcrFactory?.newInstance(),
             runNameExtraction = runNameExtraction,
             runExpiryExtraction = runExpiryExtraction,
         )

@@ -26,6 +26,7 @@ import com.getbouncer.scan.framework.time.Duration
 import com.getbouncer.scan.framework.time.Rate
 import com.getbouncer.scan.payment.FrameDetails
 import com.getbouncer.scan.payment.TextDetectModelManager
+import com.getbouncer.scan.payment.analyzer.ExpiryOcrAnalyzer
 import com.getbouncer.scan.payment.analyzer.NameAndExpiryAnalyzer
 import com.getbouncer.scan.payment.ml.AlphabetDetect
 import com.getbouncer.scan.payment.ml.AlphabetDetectModelManager
@@ -86,11 +87,11 @@ open class CardScanFlow(
         @Deprecated("Replaced by stripe card scan. See https://github.com/stripe/stripe-android/tree/master/stripecardscan")
         suspend fun prepareScan(
             context: Context,
-            apiKey: String,
             initializeNameAndExpiryExtraction: Boolean,
             forImmediateUse: Boolean,
         ) = withContext(Dispatchers.IO) {
-            Config.apiKey = apiKey
+            Config.apiKey = null
+            Config.downloadModels = false
             val deferredFetchers = mutableListOf<Deferred<FetchedData>>()
 
             deferredFetchers.add(async { SSDOcrModelManager.fetchModel(context, forImmediateUse) })
@@ -275,6 +276,7 @@ open class CardScanFlow(
                         context,
                         ExpiryDetectModelManager.fetchModel(context, forImmediateUse = true, isOptional = true)
                     ),
+                    expiryOcrFactory = ExpiryOcrAnalyzer.Factory(),
                     runNameExtraction = enableNameExtraction && isFastDevice,
                     runExpiryExtraction = enableExpiryExtraction,
                 )

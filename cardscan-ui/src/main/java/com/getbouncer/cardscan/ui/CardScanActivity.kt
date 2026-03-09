@@ -190,7 +190,6 @@ open class CardScanActivity :
     private val params: CardScanSheetParams by lazy {
         intent.getParcelableExtra(INTENT_PARAM_REQUEST)
             ?: CardScanSheetParams(
-                apiKey = "",
                 enableEnterManually = true,
                 enableNameExtraction = false,
                 enableExpiryExtraction = false,
@@ -207,7 +206,9 @@ open class CardScanActivity :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Config.apiKey = params.apiKey
+        Config.apiKey = null
+        Config.downloadModels = false
+        Config.uploadStats = false
     }
 
     override val resultListener = object : CardProcessedResultListener {

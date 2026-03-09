@@ -26,3 +26,4 @@
 langapiconfig.json
 *.cxx
 github_token
+/.idea

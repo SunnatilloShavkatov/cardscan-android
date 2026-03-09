@@ -16,7 +16,6 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 internal data class CardScanSheetParams(
-    val apiKey: String,
     val enableEnterManually: Boolean,
     val enableNameExtraction: Boolean,
     val enableExpiryExtraction: Boolean,
@@ -45,7 +44,7 @@ sealed interface CardScanSheetResult : Parcelable {
  * https://github.com/stripe/stripe-android/tree/master/stripecardscan
  */
 @Deprecated("Replaced by stripe card scan. See https://github.com/stripe/stripe-android/tree/master/stripecardscan")
-class CardScanSheet private constructor(private val apiKey: String) {
+class CardScanSheet private constructor() {
 
     private lateinit var launcher: ActivityResultLauncher<CardScanSheetParams>
 
@@ -69,10 +68,9 @@ class CardScanSheet private constructor(private val apiKey: String) {
         @Deprecated("Replaced by stripe card scan. See https://github.com/stripe/stripe-android/tree/master/stripecardscan")
         fun create(
             from: ComponentActivity,
-            apiKey: String,
             cardScanResultCallback: CardScanResultCallback,
             registry: ActivityResultRegistry = from.activityResultRegistry,
-        ) = CardScanSheet(apiKey).apply {
+        ) = CardScanSheet().apply {
             launcher = from.registerForActivityResult(
                 activityResultContract,
                 registry,
@@ -85,10 +83,9 @@ class CardScanSheet private constructor(private val apiKey: String) {
         @Deprecated("Replaced by stripe card scan. See https://github.com/stripe/stripe-android/tree/master/stripecardscan")
         fun create(
             from: Fragment,
-            apiKey: String,
             cardScanResultCallback: CardScanResultCallback,
             registry: ActivityResultRegistry? = null,
-        ) = CardScanSheet(apiKey).apply {
+        ) = CardScanSheet().apply {
             launcher = if (registry != null) {
                 from.registerForActivityResult(
                     activityResultContract,
@@ -150,7 +147,6 @@ class CardScanSheet private constructor(private val apiKey: String) {
          * Warm up the analyzers and call [onPrepared] once the scan is ready.
          *
          * @param context: A context to use for warming up the analyzers.
-         * @param apiKey: the API key used to warm up the ML models
          * @param initializeNameAndExpiryExtraction: if true, include name and expiry extraction
          * @param onPrepared: called once the scan is ready
          */
@@ -161,11 +157,10 @@ class CardScanSheet private constructor(private val apiKey: String) {
         )
         fun prepareScan(
             context: Context,
-            apiKey: String,
             initializeNameAndExpiryExtraction: Boolean,
             onPrepared: () -> Unit,
         ) = GlobalScope.launch {
-            CardScanFlow.prepareScan(context, apiKey, initializeNameAndExpiryExtraction, false)
+            CardScanFlow.prepareScan(context, initializeNameAndExpiryExtraction, false)
         }.invokeOnCompletion { onPrepared() }
     }
 
@@ -184,7 +179,6 @@ class CardScanSheet private constructor(private val apiKey: String) {
     ) {
         launcher.launch(
             CardScanSheetParams(
-                apiKey = apiKey,
                 enableEnterManually = enableEnterManually,
                 enableNameExtraction = enableNameExtraction,
                 enableExpiryExtraction = enableExpiryExtraction,

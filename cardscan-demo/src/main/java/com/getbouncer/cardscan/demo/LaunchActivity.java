@@ -23,14 +23,12 @@ import kotlin.Unit;
 
 public class LaunchActivity extends AppCompatActivity {
 
-    private static final String API_KEY = "qOJ_fF-WLDMbG05iBq5wvwiTNTmM2qIn";
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launch);
 
-        final CardScanSheet sheet = CardScanSheet.create(this, API_KEY, this::handleScanResult);
+        final CardScanSheet sheet = CardScanSheet.create(this, this::handleScanResult);
 
         // Because this activity displays card numbers, disallow screenshots.
         getWindow().setFlags(
@@ -74,7 +72,7 @@ public class LaunchActivity extends AppCompatActivity {
                 startActivity(new Intent(this, SingleActivityDemo.class))
         );
 
-        CardScanSheet.prepareScan(this, API_KEY, true, () -> null);
+        CardScanSheet.prepareScan(this, true, () -> null);
     }
 
     private Unit handleScanResult(final CardScanSheetResult result) {

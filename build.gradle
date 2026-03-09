@@ -25,6 +25,15 @@ plugins {
 allprojects {
     apply plugin: 'checkstyle'
 
+    configurations.all {
+        resolutionStrategy.force(
+            "androidx.appcompat:appcompat:1.3.1",
+            "androidx.appcompat:appcompat-resources:1.3.1",
+            "androidx.core:core:1.6.0",
+            "androidx.core:core-ktx:1.6.0",
+        )
+    }
+
     checkstyle {
         toolVersion '8.29'
     }
@@ -82,6 +91,12 @@ allprojects {
 
 ext {
     publishGroupId = 'com.getbouncer'
+    ext["signing.keyId"] = ''
+    ext["signing.password"] = ''
+    ext["signing.secretKeyRingFile"] = ''
+    ext["ossrhUsername"] = ''
+    ext["ossrhPassword"] = ''
+    ext["sonatypeStagingProfileId"] = ''
 }
 
 File secretPropsFile = project.rootProject.file('local.properties')
