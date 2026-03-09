@@ -15,14 +15,12 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.getbouncer.scan.camera.CameraPreviewImage
 import com.getbouncer.scan.framework.Config
 import com.getbouncer.scan.framework.util.getSdkVersion
 import com.getbouncer.scan.ui.util.asRect
-import com.getbouncer.scan.ui.util.dpToPixels
 import com.getbouncer.scan.ui.util.getColorByRes
 import com.getbouncer.scan.ui.util.getDrawableByRes
 import com.getbouncer.scan.ui.util.getFloatResource
@@ -56,10 +54,6 @@ abstract class SimpleScanActivity : ScanActivity() {
         object FoundLong : ScanState(isFinal = false)
         object Correct : ScanState(isFinal = true)
         object Wrong : ScanState(isFinal = false)
-    }
-
-    companion object {
-        private const val LOGO_WIDTH_DP = 100
     }
 
     /**
@@ -137,8 +131,6 @@ abstract class SimpleScanActivity : ScanActivity() {
      */
     protected open val debugOverlayView: DebugOverlay by lazy { DebugOverlay(this) }
 
-    private val logoView: ImageView by lazy { ImageView(this) }
-
     protected open val versionTextView: TextView by lazy { TextView(this) }
 
     /**
@@ -175,9 +167,6 @@ abstract class SimpleScanActivity : ScanActivity() {
         addUiComponents()
         setupUiComponents()
         setupUiConstraints()
-
-        setupLogoUi()
-        setupLogoConstraints()
 
         setupVersionUi()
         setupVersionConstraints()
@@ -233,7 +222,6 @@ abstract class SimpleScanActivity : ScanActivity() {
             cardNumberTextView,
             debugImageView,
             debugOverlayView,
-            logoView,
             versionTextView,
         )
     }
@@ -380,18 +368,6 @@ abstract class SimpleScanActivity : ScanActivity() {
         debugImageView.contentDescription = getString(R.string.bouncer_debug_description)
         debugImageView.setVisible(Config.isDebug)
         debugOverlayView.setVisible(Config.isDebug)
-    }
-
-    private fun setupLogoUi() {
-        logoView.setImageDrawable(
-            if (isBackgroundDark()) {
-                ContextCompat.getDrawable(this, R.drawable.bouncer_logo_dark_background)
-            } else {
-                ContextCompat.getDrawable(this, R.drawable.bouncer_logo_light_background)
-            }
-        )
-        logoView.contentDescription = getString(R.string.bouncer_cardscan_logo)
-        logoView.setVisible(false)
     }
 
     private fun setupVersionUi() {
@@ -605,21 +581,6 @@ abstract class SimpleScanActivity : ScanActivity() {
         }
     }
 
-    private fun setupLogoConstraints() {
-        logoView.layoutParams = ConstraintLayout.LayoutParams(
-            dpToPixels(LOGO_WIDTH_DP), // width
-            ViewGroup.LayoutParams.WRAP_CONTENT, // height
-        ).apply {
-            topMargin = resources.getDimensionPixelSize(R.dimen.bouncerLogoMargin)
-        }
-
-        logoView.addConstraints {
-            connect(it.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
-            connect(it.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
-            connect(it.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
-        }
-    }
-
     private fun setupVersionConstraints() {
         versionTextView.layoutParams = ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT, // width
@@ -765,7 +726,7 @@ abstract class SimpleScanActivity : ScanActivity() {
             )
             view.setPadding(
                 initialPaddingLeft + insets.left,
-                initialPaddingTop + insets.top,
+                initialPaddingTop,
                 initialPaddingRight + insets.right,
                 initialPaddingBottom + insets.bottom,
             )
